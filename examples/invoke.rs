@@ -2,6 +2,7 @@ extern crate parity_wasm;
 extern crate wasmi;
 
 use std::env::args;
+use std::time::{Instant};
 
 use parity_wasm::elements::{External, FunctionType, Internal, Type, ValueType};
 use wasmi::{ImportsBuilder, ModuleInstance, NopExternals, RuntimeValue};
@@ -14,6 +15,8 @@ fn main() {
     }
     let func_name = &args[2];
     let (_, program_args) = args.split_at(3);
+
+    let start_parse = Instant::now();
 
     let module = parity_wasm::deserialize_file(&args[1]).expect("File to be deserialized");
 
@@ -112,9 +115,17 @@ fn main() {
         .run_start(&mut NopExternals)
         .expect("Failed to run start function in module");
 
+    let parse_duration = start_parse.elapsed();
+    println!("module parse time: {:?}", parse_duration);
+    let start_exec = Instant::now();
+
     println!(
         "Result: {:?}",
         main.invoke_export(func_name, &args, &mut NopExternals)
             .expect("")
     );
+
+    let exec_duration = start_exec.elapsed();
+    println!("exec time: {:?}", exec_duration);
+
 }
